@@ -38,7 +38,7 @@ class ServerProxy(object):
 
     def _post(self, method, *args, **kwargs):
         url = '{}://{}/{}'.format(self.protocol, self._address, method)
-        logger.debug('post {} with args={}, kwargs={}'.format(url, args, kwargs))
+        logger.debug('post {} with args={}, kwargs={} timeout={}'.format(url, args, kwargs, self._timeout))
         kwargs.setdefault(DEFAULT_JSONRPC_CALL_MODE_ID, DEFAULT_JSONRPC_TB_CALL_MODE)
         try:
             req = self.pool.request('POST', url, retries=0,
