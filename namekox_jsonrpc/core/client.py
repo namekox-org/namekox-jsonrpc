@@ -28,7 +28,7 @@ class ServerProxy(object):
         protocol not in ('http', 'https') and self._raise(IOError, errs)
         self.protocol = protocol
         self._headers = headers or {}
-        self._timeout = timeout
+        self._timeout = timeout or 3
         self._address = urllib.splithost(uri)[0]
         self._headers.setdefault('Content-Type', 'application/json')
 
@@ -45,9 +45,9 @@ class ServerProxy(object):
             data=json.dumps({'args': args, 'kwargs': kwargs}))
         try:
             rsp = urllib2.urlopen(req, timeout=self._timeout)
+            res = json.loads(rsp.read())
         except socket.timeout:
             self._raise(RpcTimeout, self._timeout)
-        res = json.loads(rsp.read())
         err = res['errs']
         err and self._raise(gen_data_to_exc(err))
         return res['data']
