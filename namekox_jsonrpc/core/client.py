@@ -29,7 +29,7 @@ class ServerProxy(object):
         protocol not in ('http', 'https') and self._raise(IOError, errs)
         self.protocol = protocol
         self._headers = headers or {}
-        self._timeout = timeout or 3
+        self._timeout = timeout
         self._address = urllib.splithost(uri)[0]
         self._headers.setdefault('Content-Type', 'application/json')
 
@@ -42,6 +42,7 @@ class ServerProxy(object):
         kwargs.setdefault(DEFAULT_JSONRPC_CALL_MODE_ID, DEFAULT_JSONRPC_TB_CALL_MODE)
         try:
             req = self.pool.request('POST', url, retries=0,
+                                    timeout=self._timeout,
                                     headers=self._headers,
                                     body=json.dumps({'args': args, 'kwargs': kwargs}))
         except urllib3.exceptions.MaxRetryError:
