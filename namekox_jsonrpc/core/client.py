@@ -45,7 +45,7 @@ class ServerProxy(object):
                                     timeout=self._timeout,
                                     headers=self._headers,
                                     body=json.dumps({'args': args, 'kwargs': kwargs}))
-        except urllib3.exceptions.MaxRetryError:
+        except urllib3.exceptions.TimeoutError:
             self._raise(RpcTimeout, self._timeout)
         res = json.loads(req.data)
         err = res['errs']
