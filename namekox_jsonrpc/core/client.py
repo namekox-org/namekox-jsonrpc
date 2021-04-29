@@ -7,8 +7,7 @@ from __future__ import unicode_literals
 
 import json
 import urllib
-import socket
-import urllib2
+import urllib3
 
 
 from functools import partial
@@ -22,6 +21,8 @@ logger = getLogger(__name__)
 
 
 class ServerProxy(object):
+    pool = urllib3.PoolManager()
+
     def __init__(self, uri, headers=None, timeout=None):
         protocol, uri = urllib.splittype(uri)
         errs = 'unsupported JSON-RPC protocol'
@@ -39,15 +40,13 @@ class ServerProxy(object):
         url = '{}://{}/{}'.format(self.protocol, self._address, method)
         logger.debug('post {} with args={}, kwargs={}'.format(url, args, kwargs))
         kwargs.setdefault(DEFAULT_JSONRPC_CALL_MODE_ID, DEFAULT_JSONRPC_TB_CALL_MODE)
-        req = urllib2.Request(
-            url=url,
-            headers=self._headers,
-            data=json.dumps({'args': args, 'kwargs': kwargs}))
         try:
-            rsp = urllib2.urlopen(req, timeout=self._timeout)
-            res = json.loads(rsp.read())
-        except socket.timeout:
+            req = self.pool.request('POST', url, retries=0,
+                                    headers=self._headers,
+                                    body=json.dumps({'args': args, 'kwargs': kwargs}))
+        except urllib3.exceptions.MaxRetryError:
             self._raise(RpcTimeout, self._timeout)
+        res = json.loads(req.data)
         err = res['errs']
         err and self._raise(gen_data_to_exc(err))
         return res['data']
